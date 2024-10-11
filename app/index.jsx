@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native'
 import React, { useState } from 'react'
 import * as ImagePicker from 'expo-image-picker'
 import { MaterialIcons } from '@expo/vector-icons'
@@ -6,83 +6,85 @@ import { MaterialIcons } from '@expo/vector-icons'
 const Home = () => {
   const [selectedImage, setSelectedImage] = useState(null)
 
-  // Fungsi untuk membuka kamera
-  const handleOpenCamera = async () => {
-    const permissionResult = await ImagePicker.requestCameraPermissionsAsync()
+  const requestImagePermission = async (permissionFunc, imagePickerFunc) => {
+    const permissionResult = await permissionFunc()
 
-    if (permissionResult.granted === false) {
-      alert('Permission to access camera is required!')
+    if (!permissionResult.granted) {
+      alert('Permission to access is required!')
       return
     }
 
-    const result = await ImagePicker.launchCameraAsync()
-
+    const result = await imagePickerFunc()
     if (!result.canceled) {
       setSelectedImage(result.assets[0].uri)
     }
   }
 
-  // Fungsi untuk membuka galeri
-  const handleOpenGallery = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync()
-
-    if (permissionResult.granted === false) {
-      alert('Permission to access gallery is required!')
-      return
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync()
-
-    if (!result.canceled) {
-      setSelectedImage(result.assets[0].uri)
-    }
+  const handleOpenCamera = () => {
+    requestImagePermission(ImagePicker.requestCameraPermissionsAsync, ImagePicker.launchCameraAsync)
   }
 
-  // Fungsi untuk prediksi gambar
+  const handleOpenGallery = () => {
+    requestImagePermission(ImagePicker.requestMediaLibraryPermissionsAsync, ImagePicker.launchImageLibraryAsync)
+  }
+
   const handlePredictImage = () => {
-    if (selectedImage) {
-      alert('Predicting image for: ' + selectedImage)
-    } else {
-      alert('No image selected for prediction!')
-    }
+    selectedImage
+      ? alert(`Predicting image for: ${selectedImage}`)
+      : alert('No image selected for prediction!')
   }
 
-  // Fungsi untuk menghapus gambar yang dipilih
-  const handleRemoveImage = () => {
-    setSelectedImage(null)
+  const confirmRemoveImage = () => {
+    Alert.alert(
+      'Hapus Gambar',
+      'Apakah Anda yakin ingin menghapus gambar ini?',
+      [
+        {
+          text: 'Batal',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        { text: 'Hapus', onPress: () => setSelectedImage(null), style: 'destructive' },
+      ],
+      { cancelable: true }
+    )
+  }
+
+  const renderImageOrPlaceholder = () => {
+    return selectedImage ? (
+      <View>
+        <Image source={{ uri: selectedImage }} style={styles.image} />
+        <TouchableOpacity style={styles.deleteIcon} onPress={confirmRemoveImage}>
+          <MaterialIcons name="close" size={30} color="red" />
+        </TouchableOpacity>
+      </View>
+    ) : (
+      <Text>Preview Gambar</Text>
+    )
   }
 
   return (
     <View>
       <Text style={styles.title}>Prediksi Langsung</Text>
       <View style={styles.card}>
-        {selectedImage ? (
-          <View>
-            <Image source={{ uri: selectedImage }} style={{ width: 300, height: 300 }} />
-            <TouchableOpacity style={styles.deleteIcon} onPress={handleRemoveImage}>
-              <MaterialIcons name="close" size={30} color="red" />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <Text>Preview Gambar</Text>
-        )}
+        {renderImageOrPlaceholder()}
       </View>
       <View style={styles.cardButton}>
-        <TouchableOpacity style={styles.button} onPress={handleOpenCamera}>
-          <Text style={styles.buttonText}>Kamera</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleOpenGallery}>
-          <Text style={styles.buttonText}>Galeri</Text>
-        </TouchableOpacity>
+        <CustomButton title="Kamera" onPress={handleOpenCamera} />
+        <CustomButton title="Galeri" onPress={handleOpenGallery} />
       </View>
       <View style={styles.cardButton}>
-        <TouchableOpacity style={styles.buttonPredict} onPress={handlePredictImage}>
-          <Text style={styles.buttonText}>Prediksi Gambar</Text>
-        </TouchableOpacity>
+        <CustomButton title="Prediksi Gambar" onPress={handlePredictImage} style={styles.buttonPredict} />
       </View>
     </View>
   )
 }
+
+const CustomButton = ({ title, onPress, style }) => (
+  <TouchableOpacity style={[styles.button, style]} onPress={onPress}>
+    <Text style={styles.buttonText}>{title}</Text>
+  </TouchableOpacity>
+)
 
 // styles
 const styles = StyleSheet.create({
@@ -103,6 +105,11 @@ const styles = StyleSheet.create({
     marginTop: 10,
     margin: 'auto',
   },
+  image: {
+    width: 300,
+    height: 300,
+    borderRadius: 15,
+  },
   deleteIcon: {
     position: 'absolute',
     top: 10,
@@ -118,7 +125,7 @@ const styles = StyleSheet.create({
   },
   cardButton: {
     flexDirection: 'row',
-    margin: 'auto',
+    justifyContent: 'center',
     gap: 12,
     marginTop: 28,
   },
@@ -131,9 +138,6 @@ const styles = StyleSheet.create({
   },
   buttonPredict: {
     backgroundColor: '#1CA635',
-    padding: 10,
-    borderRadius: 100,
-    height: 40,
     paddingHorizontal: 20,
   },
   buttonText: {
