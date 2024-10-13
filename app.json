@@ -18,7 +18,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo_splash.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.angguncaksono.maizefriend"
     },
     "web": {
       "bundler": "metro",
@@ -30,6 +31,12 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "800c9930-6f85-4719-b9a2-75ce912a0219"
+      }
+    },
+    "owner": "alrescha79"
   }
 }

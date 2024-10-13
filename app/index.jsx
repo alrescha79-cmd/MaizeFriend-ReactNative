@@ -41,7 +41,6 @@ const Home = () => {
       [
         {
           text: 'Batal',
-          onPress: () => console.log('Cancel Pressed'),
           style: 'cancel',
         },
         { text: 'Hapus', onPress: () => setSelectedImage(null), style: 'destructive' },
