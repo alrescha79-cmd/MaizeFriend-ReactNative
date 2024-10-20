@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons'
 
 const Home = () => {
   const [selectedImage, setSelectedImage] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   const requestImagePermission = async (permissionFunc, imagePickerFunc) => {
     const permissionResult = await permissionFunc()
@@ -28,11 +29,48 @@ const Home = () => {
     requestImagePermission(ImagePicker.requestMediaLibraryPermissionsAsync, ImagePicker.launchImageLibraryAsync)
   }
 
-  const handlePredictImage = () => {
-    selectedImage
-      ? alert(`Predicting image for: ${selectedImage}`)
-      : alert('No image selected for prediction!')
-  }
+  const handlePredictImage = async () => {
+    if (!selectedImage) {
+      alert('No image selected for prediction!');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', {
+        uri: selectedImage,
+        type: 'image/jpeg',
+        name: 'image.jpg',
+      });
+
+      const response = await fetch('http://192.168.1.132:5000/predict', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        const { predicted_class, predicted_percentage } = result;
+        alert(`Hasil Prediksi: ${predicted_class},\nAkurasi: ${predicted_percentage}`);
+      } else {
+        console.error('Error response:', result);
+        alert(`Error predicting image: ${result.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Fetch error:', error);
+      alert('Error predicting image. Please try again.');
+    }finally {
+      setIsLoading(false);
+    }
+
+  };
+
 
   const confirmRemoveImage = () => {
     Alert.alert(
@@ -68,19 +106,23 @@ const Home = () => {
       <View style={styles.card}>
         {renderImageOrPlaceholder()}
       </View>
+      <Text style={styles.title}>Pilih Gambar</Text>
+      {isLoading && (
+        <Text style={{ textAlign: 'center', marginTop: 10 }}>AI Sedang Memprediksi ....</Text>
+      )}
       <View style={styles.cardButton}>
         <CustomButton title="Kamera" onPress={handleOpenCamera} />
         <CustomButton title="Galeri" onPress={handleOpenGallery} />
       </View>
       <View style={styles.cardButton}>
-        <CustomButton title="Prediksi Gambar" onPress={handlePredictImage} style={styles.buttonPredict} />
+        <CustomButton title="Prediksi Gambar" onPress={handlePredictImage} style={styles.buttonPredict} disabled={isLoading} />
       </View>
     </View>
   )
 }
 
-const CustomButton = ({ title, onPress, style }) => (
-  <TouchableOpacity style={[styles.button, style]} onPress={onPress}>
+const CustomButton = ({ title, onPress, style, disabled }) => (
+  <TouchableOpacity style={[styles.button, style, disabled && styles.buttonDisabled]} onPress={onPress} disabled={disabled}>
     <Text style={styles.buttonText}>{title}</Text>
   </TouchableOpacity>
 )
@@ -134,6 +176,9 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     height: 40,
     width: 138,
+  },
+  buttonDisabled: {
+    backgroundColor: '#a9a9a9',
   },
   buttonPredict: {
     backgroundColor: '#1CA635',

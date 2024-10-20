@@ -9,7 +9,8 @@
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/SplashScreen.png",
-      "resizeMode": "contain"
+      "backgroundColor": "#E0FCAC",
+      "resizeMode": "cover"
     },
     "ios": {
       "supportsTablet": true
@@ -17,7 +18,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo_splash.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#E0FCAC"
       },
       "package": "com.angguncaksono.maizefriend"
     },
