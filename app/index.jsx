@@ -45,7 +45,7 @@ const Home = () => {
         name: 'image.jpg',
       });
 
-      const response = await fetch('http://192.168.1.132:5000/predict', {
+      const response = await fetch('https://cnn-341033130364.asia-southeast2.run.app/predict', {
         method: 'POST',
         headers: {
           'Content-Type': 'multipart/form-data',
